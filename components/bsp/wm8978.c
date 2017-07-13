@@ -70,9 +70,7 @@ static uint16_t WM8978_REGVAL_TBL[58]=
 	0X0100,0X0002,0X0001,0X0001,0X0039,0X0039,0X0039,0X0039,
 	0X0001,0X0001
 }; 
-//WM8978??ʼ??
-//?????:0,??ʼ?????
-//    ??,????
+
 static void wm8979_interface()
 {
 
@@ -90,16 +88,16 @@ static void wm8979_pll(uint32_t k,uint8_t n)
 {
 	WM8978_REGVAL_TBL[WM8978_POWER_MANAGEMENT_1]|=bit5;//enable pll
 	WM8978_Write_Reg(WM8978_POWER_MANAGEMENT_1,WM8978_REGVAL_TBL[WM8978_POWER_MANAGEMENT_1]);
-	WM8978_REGVAL_TBL[WM8978_PLL_N]|=bit4;//mclk/2 =20m
+	//WM8978_REGVAL_TBL[WM8978_PLL_N]|=bit4;//mclk/2 =20m
 	WM8978_REGVAL_TBL[WM8978_PLL_N]&=0x1f0;
 	WM8978_REGVAL_TBL[WM8978_PLL_N]|=n;//7
 	WM8978_Write_Reg(WM8978_PLL_N,WM8978_REGVAL_TBL[WM8978_PLL_N]);
 	//k=EE009F
-	WM8978_REGVAL_TBL[WM8978_PLL_K1]=(k>>18)&0x1ff;
+	WM8978_REGVAL_TBL[WM8978_PLL_K1]=(k>>18);
 	WM8978_Write_Reg(WM8978_PLL_K1,WM8978_REGVAL_TBL[WM8978_PLL_K1]);
-	WM8978_REGVAL_TBL[WM8978_PLL_K2]=(k>>9)&0x1ff;
+	WM8978_REGVAL_TBL[WM8978_PLL_K2]=(k>>9);
 	WM8978_Write_Reg(WM8978_PLL_K2,WM8978_REGVAL_TBL[WM8978_PLL_K2]);
-	WM8978_REGVAL_TBL[WM8978_PLL_K3]=k&0x1ff;					
+	WM8978_REGVAL_TBL[WM8978_PLL_K3]=k;					
 	WM8978_Write_Reg(WM8978_PLL_K3,WM8978_REGVAL_TBL[WM8978_PLL_K3]);
 }
 static void wm8979_loopback()
@@ -109,14 +107,17 @@ static void wm8979_loopback()
 	WM8978_Write_Reg(WM8978_COMPANDING_CONTROL,WM8978_REGVAL_TBL[WM8978_COMPANDING_CONTROL]);
 
 }
+//WM8978 init
+//返回值:0,初始化正常
+//    其他,错误代码
 uint8_t WM8978_Init(void)
 {
 	//??Ϊͨ???
-	wm8979_pll(0xD49518,0x09);
+	wm8979_pll(0x3126E9,0x08);
 	wm8979_interface();
 	WM8978_Write_Reg(1,0X3B);	//R1,MICEN??Ϊ1(MICʹ?),BIASEN??Ϊ1(ģ?????),VMIDSEL[1:0]??Ϊ:11(5K)
 	WM8978_Write_Reg(2,0X1B0);	//R2,ROUT1,LOUT1???ʹ?(??????Թ??),BOOSTENR,BOOSTENLʹ?
-	WM8978_Write_Reg(3,0X6C);	//R3,LOUT2,ROUT2???ʹ?(???ȹ??),RMIX,LMIXʹ?	
+	WM8978_Write_Reg(3,0X0C);	//R3,LOUT2,ROUT2???ʹ?(???ȹ??),RMIX,LMIXʹ?	//0x6c
 	//WM8978_Write_Reg(6,0);		//R6,MCLK???????
 	WM8978_Write_Reg(43,1<<4);	//R43,INVROUT2???,???????
 	WM8978_Write_Reg(47,1<<8);	//R47??,PGABOOSTL,?ͨ??MIC??20????
@@ -127,11 +128,11 @@ uint8_t WM8978_Init(void)
 	//wm8979_loopback();
 	return 0;
 } 
-//WM8978д?Ĵ??
-//reg:?Ĵ?????
-//val:Ҫд??Ĵ????? 
-//?????:0,?ɹ?;
-//    ??,????
+//WM8978写寄存器
+//reg:寄存器地址
+//val:要写入寄存器的值 
+//返回值:0,成功;
+//其他,错误代码
 uint8_t WM8978_Write_Reg(uint8_t reg,uint16_t val)
 { 
 	uint8_t buf[2];
@@ -141,17 +142,19 @@ uint8_t WM8978_Write_Reg(uint8_t reg,uint16_t val)
 	WM8978_REGVAL_TBL[reg]=val;
 	return 0;	
 }  
-//WM8978???Ĵ??
-//??Ƕ?ȡ???ؼĴ??ֵ???????Ķ??ֵ
-//reg:?Ĵ????? 
-//?????:?Ĵ??ֵ
+
+// WM8978 read register
+// Reads the value  of the local register buffer zone
+// reg: Register Address
+// Return Value: Register value
 uint16_t WM8978_Read_Reg(uint8_t reg)
 {  
 	return WM8978_REGVAL_TBL[reg];	
 } 
-//WM8978 DAC/ADC??
-//adcen:adcʹ?(1)/?ر?0)
-//dacen:dacʹ?(1)/?ر?0)
+//WM8978 DAC/ADC配置
+//adcen:adc使能(1)/关闭(0)
+//dacen:dac使能(1)/关闭(0)
+
 void WM8978_ADDA_Cfg(uint8_t dacen,uint8_t adcen)
 {
 	uint16_t regval;
@@ -164,10 +167,10 @@ void WM8978_ADDA_Cfg(uint8_t dacen,uint8_t adcen)
 	else regval&=~(3<<0);		//R2?????λ????ر?DCR&ADCL.
 	WM8978_Write_Reg(2,regval);	//??R2	
 }
-//WM8978 ??ͨ???? 
-//micen:MIC???(1)/?ر?0)
-//lineinen:Line In???(1)/?ر?0)
-//auxen:aux???(1)/?ر?0) 
+//WM8978 输入通道配置 
+//micen:MIC开启(1)/关闭(0)
+//lineinen:Line In开启(1)/关闭(0)
+//auxen:aux开启(1)/关闭(0) 
 void WM8978_Input_Cfg(uint8_t micen,uint8_t lineinen,uint8_t auxen)
 {
 	uint16_t regval;  
@@ -186,9 +189,9 @@ void WM8978_Input_Cfg(uint8_t micen,uint8_t lineinen,uint8_t auxen)
 	if(auxen)WM8978_AUX_Gain(7);//AUX 6dB??
 	else WM8978_AUX_Gain(0);	//?ر?UX??  
 }
-//WM8978 ????? 
-//dacen:DAC???(??????(1)/?ر?0)
-//bpsen:Bypass???(¼?,????MIC,LINE IN,AUX?????(1)/?ر?0) 
+//WM8978 输出配置 
+//dacen:DAC输出(放音)开启(1)/关闭(0)
+//bpsen:Bypass输出(录音,包括MIC,LINE IN,AUX等)开启(1)/关闭(0) 
 void WM8978_Output_Cfg(uint8_t dacen,uint8_t bpsen)
 {
 	uint16_t regval=0;
@@ -201,16 +204,16 @@ void WM8978_Output_Cfg(uint8_t dacen,uint8_t bpsen)
 	WM8978_Write_Reg(50,regval);//R50??
 	WM8978_Write_Reg(51,regval);//R51?? 
 }
-//WM8978 MIC????(??????BOOST??0dB,MIC-->ADC?????ֵ???)
-//gain:0~63,???-12dB~35.25dB,0.75dB/Step
+//WM8978 MIC增益设置(不包括BOOST的20dB,MIC-->ADC输入部分的增益)
+//gain:0~63,对应-12dB~35.25dB,0.75dB/Step
 void WM8978_MIC_Gain(uint8_t gain)
 {
 	gain&=0X3F;
 	WM8978_Write_Reg(45,gain);		//R45,?ͨ??PGA?? 
 	WM8978_Write_Reg(46,gain|1<<8);	//R46,?ͨ??PGA??
 }
-//WM8978 L2/R2(Ҳ???ine In)????(L2/R2-->ADC?????ֵ???)
-//gain:0~7,0???ͨ????ֹ,1~7,???-12dB~6dB,3dB/Step
+//WM8978 L2/R2(也就是Line In)增益设置(L2/R2-->ADC输入部分的增益)
+//gain:0~7,0表示通道禁止,1~7,对应-12dB~6dB,3dB/Step
 void WM8978_LINEIN_Gain(uint8_t gain)
 {
 	uint16_t regval;
@@ -222,8 +225,7 @@ void WM8978_LINEIN_Gain(uint8_t gain)
 	regval&=~(7<<4);			//???ԭ??????
  	WM8978_Write_Reg(48,regval|gain<<4);//??R48
 } 
-//WM8978 AUXR,AUXL(PWM?Ƶ????????(AUXR/L-->ADC?????ֵ???)
-//gain:0~7,0???ͨ????ֹ,1~7,???-12dB~6dB,3dB/Step
+
 void aplay(char* filename){
 	//"/sdcard/test.wav"
 	WAV_HEADER wav_head;
@@ -253,6 +255,8 @@ void aplay(char* filename){
     fclose(f);
     free(samples_data);
 }
+//WM8978 AUXR,AUXL(PWM音频部分)增益设置(AUXR/L-->ADC输入部分的增益)
+//gain:0~7,0表示通道禁止,1~7,对应-12dB~6dB,3dB/Step
 void WM8978_AUX_Gain(uint8_t gain)
 {
 	uint16_t regval;
@@ -264,9 +268,9 @@ void WM8978_AUX_Gain(uint8_t gain)
 	regval&=~(7<<0);			//???ԭ??????
  	WM8978_Write_Reg(48,regval|gain<<0);//??R48
 }  
-//??I2S???ģʽ
-//fmt:0,LSB(????;1,MSB(????;2,???????I2S;3,PCM/DSP;
-//len:0,16λ;1,20λ;2,24λ;3,32λ;  
+//设置I2S工作模式
+//fmt:0,LSB(右对齐);1,MSB(左对齐);2,飞利浦标准I2S;3,PCM/DSP;
+//len:0,16位;1,20位;2,24位;3,32位;  
 void WM8978_I2S_Cfg(uint8_t fmt,uint8_t len)
 {
 	fmt&=0X03;
@@ -274,9 +278,9 @@ void WM8978_I2S_Cfg(uint8_t fmt,uint8_t len)
 	WM8978_Write_Reg(4,(fmt<<3)|(len<<5));	//R4,WM8978???ģʽ??	
 }	
 
-//??????????????
-//voll:???????(0~63)
-//volr:???????(0~63)
+//设置耳机左右声道音量
+//voll:左声道音量(0~63)
+//volr:右声道音量(0~63)
 void WM8978_HPvol_Set(uint8_t voll,uint8_t volr)
 {
 	voll&=0X3F;
@@ -286,8 +290,8 @@ void WM8978_HPvol_Set(uint8_t voll,uint8_t volr)
 	WM8978_Write_Reg(52,voll);			//R52,?????????????
 	WM8978_Write_Reg(53,volr|(1<<8));	//R53,?????????????,ͬ?????(HPVU=1)
 }
-//????????
-//voll:???????(0~63) 
+//设置喇叭音量
+//voll:左声道音量(0~63) 
 void WM8978_SPKvol_Set(uint8_t volx)
 { 
 	volx&=0X3F;//?????Χ
@@ -295,16 +299,16 @@ void WM8978_SPKvol_Set(uint8_t volx)
  	WM8978_Write_Reg(54,volx);			//R54,?????????????
 	WM8978_Write_Reg(55,volx|(1<<8));	//R55,?????????????,ͬ?????(SPKVU=1)	
 }
-//??3D????
-//depth:0~15(3Dǿ??0??,15?ǿ)
+//设置3D环绕声
+//depth:0~15(3D强度,0最弱,15最强)
 void WM8978_3D_Set(uint8_t depth)
 { 
 	depth&=0XF;//?????Χ 
  	WM8978_Write_Reg(41,depth);	//R41,3D????? 	
 }
-//??EQ/3D?????
-//dir:0,?ADC???
-//    1,?DAC???(Ĭ?)
+//设置EQ/3D作用方向
+//dir:0,在ADC起作用
+//    1,在DAC起作用(默认)
 void WM8978_EQ_3D_Dir(uint8_t dir)
 {
 	uint16_t regval; 
@@ -314,9 +318,9 @@ void WM8978_EQ_3D_Dir(uint8_t dir)
  	WM8978_Write_Reg(18,regval);//R18,EQ1?ĵ?λ???Q/3D???
 }
 
-//??EQ1
-//cfreq:???Ƶ?,0~3,?ֱ?Ӧ:80/105/135/175Hz
-//gain:??,0~24,???-12~+12dB
+//设置EQ1
+//cfreq:截止频率,0~3,分别对应:80/105/135/175Hz
+//gain:增益,0~24,对应-12~+12dB
 void WM8978_EQ1_Set(uint8_t cfreq,uint8_t gain)
 { 
 	uint16_t regval;
@@ -329,9 +333,9 @@ void WM8978_EQ1_Set(uint8_t cfreq,uint8_t gain)
 	regval|=gain;		//????	
  	WM8978_Write_Reg(18,regval);//R18,EQ1?? 	
 }
-//??EQ2
-//cfreq:??Ƶ?,0~3,?ֱ?Ӧ:230/300/385/500Hz
-//gain:??,0~24,???-12~+12dB
+//设置EQ2
+//cfreq:中心频率,0~3,分别对应:230/300/385/500Hz
+//gain:增益,0~24,对应-12~+12dB
 void WM8978_EQ2_Set(uint8_t cfreq,uint8_t gain)
 { 
 	uint16_t regval=0;
@@ -342,9 +346,9 @@ void WM8978_EQ2_Set(uint8_t cfreq,uint8_t gain)
 	regval|=gain;		//????	
  	WM8978_Write_Reg(19,regval);//R19,EQ2?? 	
 }
-//??EQ3
-//cfreq:??Ƶ?,0~3,?ֱ?Ӧ:650/850/1100/1400Hz
-//gain:??,0~24,???-12~+12dB
+//设置EQ3
+//cfreq:中心频率,0~3,分别对应:650/850/1100/1400Hz
+//gain:增益,0~24,对应-12~+12dB
 void WM8978_EQ3_Set(uint8_t cfreq,uint8_t gain)
 { 
 	uint16_t regval=0;
@@ -355,9 +359,9 @@ void WM8978_EQ3_Set(uint8_t cfreq,uint8_t gain)
 	regval|=gain;		//????	
  	WM8978_Write_Reg(20,regval);//R20,EQ3?? 	
 }
-//??EQ4
-//cfreq:??Ƶ?,0~3,?ֱ?Ӧ:1800/2400/3200/4100Hz
-//gain:??,0~24,???-12~+12dB
+//设置EQ4
+//cfreq:中心频率,0~3,分别对应:1800/2400/3200/4100Hz
+//gain:增益,0~24,对应-12~+12dB
 void WM8978_EQ4_Set(uint8_t cfreq,uint8_t gain)
 { 
 	uint16_t regval=0;
@@ -368,9 +372,9 @@ void WM8978_EQ4_Set(uint8_t cfreq,uint8_t gain)
 	regval|=gain;		//????	
  	WM8978_Write_Reg(21,regval);//R21,EQ4?? 	
 }
-//??EQ5
-//cfreq:??Ƶ?,0~3,?ֱ?Ӧ:5300/6900/9000/11700Hz
-//gain:??,0~24,???-12~+12dB
+//设置EQ5
+//cfreq:中心频率,0~3,分别对应:5300/6900/9000/11700Hz
+//gain:增益,0~24,对应-12~+12dB
 void WM8978_EQ5_Set(uint8_t cfreq,uint8_t gain)
 { 
 	uint16_t regval=0;

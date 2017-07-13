@@ -124,20 +124,21 @@ void app_main()
     // gpio_config(&io_conf);
     tcpip_adapter_init();
     wifi_init_sta();
-    // hal_i2c_init(0,5,17);
-    // hal_i2s_init(0,48000,16,2);
-    // WM8978_Init();
-    // WM8978_ADDA_Cfg(1,1); 
-    // WM8978_Input_Cfg(1,0,0);     
-    // WM8978_Output_Cfg(1,0); 
-    // WM8978_MIC_Gain(46);
-    // WM8978_SPKvol_Set(100);
-    // WM8978_EQ_3D_Dir(1);
-    // WM8978_EQ1_Set(3,24);
-    // WM8978_EQ2_Set(3,24);
-    // WM8978_EQ3_Set(3,24);
-    // WM8978_EQ4_Set(3,24);
-    // WM8978_EQ5_Set(3,24);
+    hal_i2c_init(0,5,17);
+    hal_i2s_init(0,48000,16,2);
+    WM8978_Init();
+    WM8978_ADDA_Cfg(1,1); 
+    WM8978_Input_Cfg(1,0,0);     
+    WM8978_Output_Cfg(1,0); 
+    WM8978_MIC_Gain(46);
+    //WM8978_SPKvol_Set(100);
+    WM8978_HPvol_Set(50,50);
+    WM8978_EQ_3D_Dir(1);
+    WM8978_EQ1_Set(2,12);
+    WM8978_EQ2_Set(2,12);
+    WM8978_EQ3_Set(2,12);
+    WM8978_EQ4_Set(2,12);
+    WM8978_EQ5_Set(2,12);
 
     // sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     // sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
@@ -155,7 +156,7 @@ void app_main()
     //     }
     //     return;
     // }
-    // sdmmc_card_print_printf(stdout, card);
+    //sdmmc_card_print_printf(stdout, card);
     // /*eth_init();
     //do{
     //gpio_set_level(GPIO_OUTPUT_IO_0, 0);
@@ -182,13 +183,16 @@ void app_main()
     xTaskCreate(vTelnetTask, "telnet_task", 2048, NULL, (tskIDLE_PRIORITY + 10), NULL);
     //char databuff[100]={0};
     //int len=0;
-    
-     
+    //xTaskCreatePinnedToCore
+    char samples_data[1024];
     uint8_t cnt=0;
     while(1){
         //gpio_set_level(GPIO_OUTPUT_IO_0, cnt%2);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        //vTaskDelay(1000 / portTICK_PERIOD_MS);
         //aplay("/sdcard/test.wav");
+        hal_i2s_read(0,samples_data,1024,1000);
+        hal_i2s_write(0,samples_data,1024,1000);
+
         cnt++;
     }
 }
