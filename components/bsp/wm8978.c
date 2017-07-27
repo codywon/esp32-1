@@ -75,6 +75,7 @@ static void wm8979_interface()
 {
 
 	WM8978_REGVAL_TBL[WM8978_AUDIO_INTERFACE] &=~(bit6|bit5);//16bit
+	//WM8978_REGVAL_TBL[WM8978_AUDIO_INTERFACE]|=(bit6|bit5);//32bit
 	WM8978_Write_Reg(WM8978_AUDIO_INTERFACE,WM8978_REGVAL_TBL[WM8978_AUDIO_INTERFACE]);
 	WM8978_REGVAL_TBL[WM8978_CLOCKING]|=bit0; //the codec ic is master mode 
 	WM8978_REGVAL_TBL[WM8978_CLOCKING]|=bit3|bit2;// 256/32=8
@@ -113,7 +114,7 @@ static void wm8979_loopback()
 uint8_t WM8978_Init(void)
 {
 	//??Ϊͨ???
-	wm8979_pll(0x3126E9,0x08);
+	wm8979_pll(0x86c227,0x07);
 	wm8979_interface();
 	WM8978_Write_Reg(1,0X3B);	//R1,MICEN??Ϊ1(MICʹ?),BIASEN??Ϊ1(ģ?????),VMIDSEL[1:0]??Ϊ:11(5K)
 	WM8978_Write_Reg(2,0X1B0);	//R2,ROUT1,LOUT1???ʹ?(??????Թ??),BOOSTENR,BOOSTENLʹ?
@@ -250,7 +251,7 @@ void aplay(char* filename){
    	while(datalen){
    		rlen=fread(samples_data,1,1024,f);
    		datalen-=rlen;
-    	hal_i2s_write(0,samples_data,rlen,1000);
+    	hal_i2s_write(0,samples_data,rlen,5000);
     }
     fclose(f);
     free(samples_data);
