@@ -125,8 +125,8 @@ void app_main()
     // io_conf.pull_down_en = 0;
     // io_conf.pull_up_en = 0;
     // gpio_config(&io_conf);
-    tcpip_adapter_init();
-    wifi_init_sta();
+    //tcpip_adapter_init();
+    //wifi_init_sta();
 
     hal_i2c_init(0,5,17);
     hal_i2s_init(0,44100,16,2);
@@ -134,15 +134,18 @@ void app_main()
     WM8978_ADDA_Cfg(1,1); 
     WM8978_Input_Cfg(1,0,0);     
     WM8978_Output_Cfg(1,0); 
-    WM8978_MIC_Gain(20);
-    //WM8978_SPKvol_Set(100);
-    WM8978_HPvol_Set(35,35);
+    WM8978_MIC_Gain(10);
+    WM8978_AUX_Gain(0);
+    WM8978_LINEIN_Gain(0);
+    WM8978_SPKvol_Set(0);
+    WM8978_HPvol_Set(20,20);
     WM8978_EQ_3D_Dir(1);
-    WM8978_EQ1_Set(0,12);
-    WM8978_EQ2_Set(0,12);
-    WM8978_EQ3_Set(0,12);
-    WM8978_EQ4_Set(0,12);
+    WM8978_EQ1_Set(0,24);
+    WM8978_EQ2_Set(0,24);
+    WM8978_EQ3_Set(0,24);
+    WM8978_EQ4_Set(0,24);
     WM8978_EQ5_Set(0,0);
+
     bt_speaker_start();
     // sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     // sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
@@ -164,20 +167,20 @@ void app_main()
     // /*eth_init();
     //do{
     //gpio_set_level(GPIO_OUTPUT_IO_0, 0);
-    xEventGroupWaitBits(station_event_group,STA_GOTIP_BIT,pdTRUE,pdTRUE,portMAX_DELAY);
-    ESP_LOGI(TAG,"got ip address");
+    //xEventGroupWaitBits(station_event_group,STA_GOTIP_BIT,pdTRUE,pdTRUE,portMAX_DELAY);
+    //ESP_LOGI(TAG,"got ip address");
     //xEventGroupWaitBits(eth_event_group,ETH_GOTIP_BIT,pdTRUE,pdTRUE,portMAX_DELAY);
     //esp_err_t tcpip_adapter_get_ip_printf(tcpip_adapter_if_t tcpip_if, tcpip_adapter_ip_printf_t *ip_printf);
     //gpio_set_level(GPIO_OUTPUT_IO_0, 1);
-    tcpip_adapter_ip_info_t ip;
-    memset(&ip, 0, sizeof(tcpip_adapter_ip_info_t));
-    if (tcpip_adapter_get_ip_info(ESP_IF_WIFI_STA, &ip) == 0) {
-        ESP_LOGI(TAG, "~~~~~~~~~~~");
-        ESP_LOGI(TAG, "ETHIP:"IPSTR, IP2STR(&ip.ip));
-        ESP_LOGI(TAG, "ETHPMASK:"IPSTR, IP2STR(&ip.netmask));
-        ESP_LOGI(TAG, "ETHPGW:"IPSTR, IP2STR(&ip.gw));
-        ESP_LOGI(TAG, "~~~~~~~~~~~");
-    }
+    //tcpip_adapter_ip_info_t ip;
+    // memset(&ip, 0, sizeof(tcpip_adapter_ip_info_t));
+    // if (tcpip_adapter_get_ip_info(ESP_IF_WIFI_STA, &ip) == 0) {
+    //     ESP_LOGI(TAG, "~~~~~~~~~~~");
+    //     ESP_LOGI(TAG, "ETHIP:"IPSTR, IP2STR(&ip.ip));
+    //     ESP_LOGI(TAG, "ETHPMASK:"IPSTR, IP2STR(&ip.netmask));
+    //     ESP_LOGI(TAG, "ETHPGW:"IPSTR, IP2STR(&ip.gw));
+    //     ESP_LOGI(TAG, "~~~~~~~~~~~");
+    // }
         //xEventGroupWaitBits(eth_event_group,ETH_DISCONNECTED_BIT,pdTRUE,pdTRUE,portMAX_DELAY);
     //}while(1);
     //if(create_tcp_server(8080)!=ESP_OK){
@@ -188,7 +191,7 @@ void app_main()
     //char databuff[100]={0};
     //int len=0;
     //xTaskCreatePinnedToCore
-    //char samples_data[1024];
+    char samples_data[256];
     //memset(samples_data,0,1024);
     //uint8_t cnt=0;
     while(1){
